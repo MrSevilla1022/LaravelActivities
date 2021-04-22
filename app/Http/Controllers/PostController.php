@@ -38,13 +38,43 @@ class PostController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        //this is for validations
+        $request->validate([
+            'title' => 'required|max:100',
+            'description' => 'required'
+        ]);
+
+        //Image store link and formatting
+        if($request->hasFile('img')){
+
+            $filenameWithExt = $request->file('img')->getClientOriginalName();
+
+            $filename = pathinfo($filenameWithExt, PATHINFO_FILENAME);
+
+            $extension = $request->file('img')->getClientOriginalExtension();
+
+            $filenameToStore = $filename.'_'.time().'.'.$extension;
+
+            $path = $request->file('img')->storeAs('public/img', $filenameToStore);
+        } else{
+            $filenameToStore = '';
+        }
+
+        //this is for storing title and desc to db
         $post = new Post();
         $post->title = $request->title;
         $post->description = $request->description;
+
+        //Storing image
+        $post->img = $filenameToStore;
         $post->save();
 
-        return redirect('/posts');
+        //returning to posts with saved status
+        if ($post->save()){
+            return redirect('/posts')->with('status','Sucessfully saved');
+        }
+
+        
     }
 
     /**
